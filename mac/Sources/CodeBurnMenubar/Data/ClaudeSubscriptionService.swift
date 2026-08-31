@@ -59,18 +59,21 @@ enum ClaudeSubscriptionService {
     /// User-initiated. Reads Claude's keychain (PROMPTS), copies to our keychain,
     /// then fetches usage. Idempotent — safe to call again to "reconnect".
     static func bootstrap() async throws -> SubscriptionUsage {
-        // Honour the same 429 backoff that refreshIfBootstrapped respects.
-        // Without this, a user spamming Reconnect during a sustained
-        // rate-limit window hammers Anthropic on every click — exactly the
-        // pattern that escalates the backoff.
-        if let until = usageBlockedUntil(), until > Date() {
-            throw FetchError.rateLimited(retryAt: until)
-        }
+        // Read the source first so a real Claude re-login can escape a backoff
+        // created by the previously rejected token. Repeated Connect clicks with
+        // the same token still honour the block and cannot hammer Anthropic.
+        let previousToken = try? ClaudeCredentialStore.currentRecord()?.accessToken
         let record: ClaudeCredentialStore.CredentialRecord
         do {
             record = try ClaudeCredentialStore.bootstrap()
         } catch let err as ClaudeCredentialStore.StoreError {
             throw FetchError.bootstrapFailed(err)
+        }
+        if let until = usageBlockedUntil(), until > Date() {
+            guard !shouldHonorRateLimit(previousToken: previousToken, sourceToken: record.accessToken) else {
+                throw FetchError.rateLimited(retryAt: until)
+            }
+            clearUsageBlock()
         }
         return try await fetchWithRecord(initial: record)
     }
@@ -92,6 +95,11 @@ enum ClaudeSubscriptionService {
             guard let token else { throw FetchError.notBootstrapped }
             return try await fetch(token: token, allowOne401Recovery: true)
         } catch let err as ClaudeCredentialStore.StoreError {
+            if case .sourceTokenStale = err {
+                // The Claude CLI owns refresh-token rotation. Give it time to
+                // rotate instead of retrying the same rejected token every minute.
+                _ = recordUsageRateLimit(retryAfterSeconds: 300)
+            }
             throw FetchError.credential(err)
         } catch let err as FetchError {
             throw err
@@ -199,6 +207,10 @@ enum ClaudeSubscriptionService {
         let seconds = max(retryAfterSeconds ?? 300, 60)
         let newUntil = now.addingTimeInterval(TimeInterval(seconds))
         return max(existingUntil ?? .distantPast, newUntil)
+    }
+
+    static func shouldHonorRateLimit(previousToken: String?, sourceToken: String) -> Bool {
+        previousToken == sourceToken
     }
 
     /// Returns the effective Retry-After delay. HTTP headers take precedence

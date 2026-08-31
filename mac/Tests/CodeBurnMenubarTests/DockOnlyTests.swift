@@ -98,6 +98,9 @@ struct DockOnlyTests {
         #expect(CapacityDockCopy.japaneseReset(at: nil, now: now) == "")
         #expect(CapacityDockCopy.japaneseRetryStatus(hasPreviousUsage: true) == "前回の使用量 · 再試行中")
         #expect(CapacityDockCopy.japaneseRetryStatus(hasPreviousUsage: false) == "一時的に取得できません · 自動再試行中")
+        #expect(ClaudeSubscriptionService.shouldHonorRateLimit(previousToken: "old", sourceToken: "old"))
+        #expect(!ClaudeSubscriptionService.shouldHonorRateLimit(previousToken: "old", sourceToken: "new"))
+        #expect(!ClaudeSubscriptionService.shouldHonorRateLimit(previousToken: nil, sourceToken: "new"))
     }
 
     @Test("Claude scoped windows retain their percentages and weekly headline")

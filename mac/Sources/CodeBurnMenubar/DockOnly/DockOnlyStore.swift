@@ -106,6 +106,7 @@ final class DockOnlyStore: CapacityDockQuotaSource {
             switch error {
             case .notBootstrapped, .bootstrapFailed: return ("Claudeにログイン後、再接続してください。", true)
             case .rateLimited: return ("取得回数の制限中です。時間を置いて自動で再試行します。", false)
+            case .credential(.sourceTokenStale): return ("Claude Codeの認証更新待ちです。Claude Codeを開くか、再ログインしてください。", false)
             default: if error.isTerminal { return ("Claudeへの再接続が必要です。", true) }
             }
         }
