@@ -94,6 +94,8 @@ final class CapacityDockViewModel {
         self.dockedEdge = preferences.dockedEdge
         self.attachmentEdge = preferences.attachmentEdge
         self.attachmentProgress = preferences.dockedEdge == nil ? 0 : 1
+        self.isRailPresentationExpanded = preferences.alwaysShowProviders
+        self.railPresentationProgress = preferences.alwaysShowProviders ? 1 : 0
     }
 
     var displayedProviders: [CapacityDockProvider] {
@@ -113,8 +115,11 @@ final class CapacityDockViewModel {
             scale: scale
         )
     }
+    var isRailExpanded: Bool {
+        preferences.alwaysShowProviders || interaction.isExpanded
+    }
     var targetBodyLength: CGFloat {
-        interaction.isExpanded ? expandedBodyLength : restingBodyLength
+        isRailExpanded ? expandedBodyLength : restingBodyLength
     }
     var bodyLength: CGFloat {
         restingBodyLength

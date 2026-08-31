@@ -145,6 +145,7 @@ enum CapacityDockProviderSelection {
 
 enum CapacityDockPreferences {
     static let enabledKey = "CodeBurnCapacityDockEnabled"
+    static let alwaysShowProvidersKey = "CodeBurnCapacityDockAlwaysShowProviders"
     static let selectedProvidersKey = "CodeBurnCapacityDockProviders"
     static let preferredProviderKey = "CodeBurnCapacityDockPreferredProvider"
     static let dockEdgeKey = "CodeBurnCapacityDockEdge"
@@ -174,6 +175,7 @@ enum CapacityDockPreferences {
         let scale: Double
         let theme: CapacityDockTheme
         let gaugeShape: CapacityDockGaugeShape
+        var alwaysShowProviders: Bool = false
     }
 
     static func load(defaults: UserDefaults = .standard) -> Snapshot {
@@ -231,12 +233,18 @@ enum CapacityDockPreferences {
             theme: defaults.string(forKey: themeKey)
                 .flatMap(CapacityDockTheme.init(rawValue:)) ?? .graphite,
             gaugeShape: defaults.string(forKey: gaugeShapeKey)
-                .flatMap(CapacityDockGaugeShape.init(rawValue:)) ?? .squircle
+                .flatMap(CapacityDockGaugeShape.init(rawValue:)) ?? .squircle,
+            alwaysShowProviders: defaults.bool(forKey: alwaysShowProvidersKey)
         )
     }
 
     static func setEnabled(_ enabled: Bool, defaults: UserDefaults = .standard) {
         defaults.set(enabled, forKey: enabledKey)
+        notifyChanged()
+    }
+
+    static func setAlwaysShowProviders(_ enabled: Bool, defaults: UserDefaults = .standard) {
+        defaults.set(enabled, forKey: alwaysShowProvidersKey)
         notifyChanged()
     }
 

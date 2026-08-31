@@ -124,4 +124,27 @@ struct DockOnlyTests {
         #expect(summary.planLabel == "Pro")
         #expect(summary.planLabel?.contains("サンプル") == false)
     }
+
+    @Test("always-visible icons survive hover exit and dismissal, and persist across reload")
+    func alwaysVisibleProviders() {
+        let defaults = isolatedDefaults()
+        CapacityDockPreferences.setSelectedProviders([.claude, .codex], defaults: defaults)
+        CapacityDockPreferences.setAlwaysShowProviders(true, defaults: defaults)
+        let model = CapacityDockViewModel(preferences: CapacityDockPreferences.load(defaults: defaults))
+        #expect(Set(model.displayedProviders) == Set([CapacityDockProvider.claude, .codex]))
+        #expect(model.bodyLength == model.expandedBodyLength)
+        model.interaction.setRailHovered(true)
+        model.interaction.beginRailExitGrace()
+        model.interaction.completeCollapseGrace()
+        model.interaction.dismiss()
+        #expect(model.isRailExpanded)
+        #expect(model.targetBodyLength == model.expandedBodyLength)
+        #expect(!model.interaction.isPinned)
+        let reloaded = CapacityDockViewModel(preferences: CapacityDockPreferences.load(defaults: defaults))
+        #expect(reloaded.displayedProviders.count == 2)
+        CapacityDockPreferences.setAlwaysShowProviders(false, defaults: defaults)
+        model.preferences = CapacityDockPreferences.load(defaults: defaults)
+        #expect(!model.isRailExpanded)
+        #expect(model.targetBodyLength == model.restingBodyLength)
+    }
 }

@@ -27,6 +27,7 @@ final class DockOnlyAppDelegate: NSObject, NSApplicationDelegate {
         defaults = demo ? UserDefaults(suiteName: "io.github.zenon7171.capacity-dock.demo")! : .standard
         defaults.register(defaults: [
             CapacityDockPreferences.enabledKey: true,
+            CapacityDockPreferences.alwaysShowProvidersKey: true,
             CapacityDockPreferences.selectedProvidersKey: ["claude", "codex"],
             CapacityDockPreferences.preferredProviderKey: "claude",
             CapacityDockPreferences.dockEdgeKey: "right",
@@ -169,6 +170,9 @@ private struct DockOnlySettings: View {
             Section("Dockの表示") {
                 Toggle("Capacity Dockを表示", isOn: Binding(get: { snapshot.isEnabled }, set: {
                     CapacityDockPreferences.setEnabled($0, defaults: defaults)
+                }))
+                Toggle("選択したアイコンを常に表示", isOn: Binding(get: { snapshot.alwaysShowProviders }, set: {
+                    CapacityDockPreferences.setAlwaysShowProviders($0, defaults: defaults)
                 }))
                 ForEach(DockOnlyStore.providers) { provider in
                     Toggle(provider.displayName, isOn: Binding(get: { snapshot.selectedProviders.contains(provider) }, set: { selected in

@@ -799,7 +799,7 @@ final class CapacityDockController {
 
     private func layoutRail(preserveCurrentTop: Bool = true, animate: Bool = true) {
         guard let railPanel, let screen = targetScreen else { return }
-        let wantsExpandedPresentation = model.interaction.isExpanded
+        let wantsExpandedPresentation = model.isRailExpanded
         if wantsExpandedPresentation {
             model.isRailPresentationExpanded = true
         }
@@ -973,7 +973,7 @@ final class CapacityDockController {
         let start = railPanel.frame
         let duration = CapacityDockMotion.duration(for: transaction, reduceMotion: reduceMotion)
         let revealFrom = model.railPresentationProgress
-        let revealTo: CGFloat = model.interaction.isExpanded ? 1 : 0
+        let revealTo: CGFloat = model.isRailExpanded ? 1 : 0
         let attachmentFrom = model.attachmentProgress
         let attachmentTo: CGFloat = model.dockedEdge == nil ? 0 : 1
         let backingScale = railPanel.screen?.backingScaleFactor ?? 2
@@ -1051,7 +1051,7 @@ final class CapacityDockController {
                     self.railPanel?.contentView?.needsDisplay = true
                 }
                 self.lastKnownRailTop = target.maxY
-                if !self.model.interaction.isExpanded {
+                if !self.model.isRailExpanded {
                     if self.model.railPresentationProgress != 0 {
                         self.model.railPresentationProgress = 0
                     }
