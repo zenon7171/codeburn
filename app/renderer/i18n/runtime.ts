@@ -1,6 +1,6 @@
 import { JA_TRANSLATIONS } from './ja'
 
-const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'CODE', 'PRE', 'TEXTAREA'])
+const SKIP_SELECTOR = 'script, style, code, pre, textarea, [data-no-i18n="true"], [translate="no"], [contenteditable]:not([contenteditable="false"])'
 const TRANSLATABLE_ATTRIBUTES = ['aria-label', 'title', 'placeholder'] as const
 
 const MONTHS: Readonly<Record<string, number>> = Object.freeze({
@@ -46,6 +46,10 @@ function translateEnglishDate(text: string): string | null {
   return `${left}〜${right}`
 }
 
+function resetTranslation(text: string): string {
+  return text === 'now' ? '今すぐリセット' : `${translateJa(text)}にリセット`
+}
+
 function dynamicTranslation(text: string): string | null {
   const count = translateCount(text)
   if (count) return count
@@ -84,7 +88,11 @@ function dynamicTranslation(text: string): string | null {
   match = text.match(/^([\d.]+)% priced$/)
   if (match) return `${match[1]}% 価格取得済み`
   match = text.match(/^([\d.]+)% used(?: · resets (.+))?$/)
-  if (match) return `${match[1]}%使用${match[2] ? ` · ${match[2]}にリセット` : ''}`
+  if (match) return `${match[1]}%使用${match[2] ? ` · ${resetTranslation(match[2])}` : ''}`
+  // React emits the number, suffix and reset time as separate text nodes.
+  if (text === '% used') return '%使用'
+  match = text.match(/^· resets (.+)$/)
+  if (match) return `· ${resetTranslation(match[1])}`
   match = text.match(/^in (\d+)d(?: (\d+)h)?$/)
   if (match) return `${match[1]}日${match[2] ? `${match[2]}時間` : ''}後`
   match = text.match(/^in (\d+)h(?: (\d+)m)?$/)
@@ -127,8 +135,7 @@ export function translateJa(value: string): string {
 function shouldSkip(node: Node): boolean {
   const element = node.nodeType === Node.ELEMENT_NODE ? node as Element : node.parentElement
   if (!element) return false
-  if (SKIP_TAGS.has(element.tagName)) return true
-  return element.closest('[data-no-i18n="true"]') !== null
+  return element.closest(SKIP_SELECTOR) !== null
 }
 
 function translateTextNode(node: Text): void {

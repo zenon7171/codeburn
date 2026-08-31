@@ -251,6 +251,9 @@ export const JA_TRANSLATIONS: Readonly<Record<string, string>> = Object.freeze({
   'Days of data': 'データ日数',
 
   // Plans and quota
+  'Weekly': '週間',
+  '5-hour': '5時間',
+  'Daily': '日次',
   'Custom plan': 'カスタムプラン',
   'API usage': 'API利用',
   'Add plan…': 'プランを追加…',

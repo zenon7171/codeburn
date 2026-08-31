@@ -1,3 +1,6 @@
+> **日本語で読む → [日本語README](README.ja.md)** · [日本語版の導入・ビルド・対応状況](README-JA-FORK.md)<br>
+> This is an unofficial Japanese fork. The upstream English README follows; official downloads below do not include this fork's Japanese UI.
+
 <table align="center">
   <tr>
     <td align="center" valign="middle">

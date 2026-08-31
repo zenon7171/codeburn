@@ -4,3 +4,7 @@ release/
 build/cli/
 *.log
 .vite/
+
+# Local-only Japanese visual QA fixture (not part of the product build)
+renderer/i18n/preview.html
+renderer/i18n/preview.tsx

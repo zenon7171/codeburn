@@ -88,12 +88,17 @@ jobs:
             package-lock.json
             app/package-lock.json
 
+      - name: Install audit dependencies
+        if: steps.merge.outputs.changed == 'true' && steps.merge.outputs.conflict != 'true'
+        run: npm ci --no-audit --no-fund
+
       - name: Audit strings introduced by upstream
         if: steps.merge.outputs.changed == 'true' && steps.merge.outputs.conflict != 'true'
         id: audit
         continue-on-error: true
         shell: bash
         run: |
+          node --test scripts/i18n-scan.test.mjs
           node scripts/i18n-audit.mjs \
             --base "${{ steps.merge.outputs.upstream_base }}" \
             --head "${{ steps.merge.outputs.upstream_head }}"
@@ -105,13 +110,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm ci --no-audit --no-fund
           npm test
           npm run build:cli
           npm ci --prefix app --no-audit --no-fund
           npm --prefix app test
           npm --prefix app run typecheck
           npm --prefix app run build
+
+      - name: Upload Japanese translation audit
+        if: always() && steps.merge.outputs.changed == 'true' && steps.merge.outputs.conflict != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: japanese-translation-audit
+          path: artifacts/i18n-missing-ja.json
 
       - name: Report validation failure
         if: steps.merge.outputs.changed == 'true' && steps.validate.outcome == 'failure'

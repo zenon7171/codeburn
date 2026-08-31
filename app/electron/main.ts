@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, shell, type MenuItemConstructorOptions } from 'electron'
 import path from 'node:path'
+import { localizeMenuJa } from './menu-ja'
 
 import { CliError, DESKTOP_COLD_TIMEOUT_MS, PROGRESS_LINE_PREFIX, reapOrphanServe, resolveCodeburnPath, shutdownAll, spawnCli, spawnCliAction, startServe, type ActionResult, type SpawnPriority } from './cli'
 import { getQuota, sanitizeError } from './quota'
@@ -543,7 +544,7 @@ export function createApplicationMenuTemplate(isDev = Boolean(process.env.VITE_D
     },
   )
 
-  return template
+  return localizeMenuJa(template)
 }
 
 function installApplicationMenu(): void {

@@ -209,7 +209,7 @@ function QuotaMeter({ window }: { window: QuotaWindow }) {
     <div className="quota-window">
       <div className="quota-window-labels">
         <span>{window.label}</span>
-        <span>{percent}% used{reset ? ` · resets ${reset}` : ''}</span>
+        <span>{`${percent}% used${reset ? ` · resets ${reset}` : ''}`}</span>
       </div>
       <div className="track" data-testid={`quota-track-${window.label}`}>
         <i className={severity} style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} />

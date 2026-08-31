@@ -14,6 +14,35 @@ afterEach(() => {
 })
 
 describe('Japanese renderer localization', () => {
+  it.each([
+    ['90% used · resets in 2h', '90%使用 · 2時間後にリセット'],
+    ['25% used · resets in 2h 29m', '25%使用 · 2時間29分後にリセット'],
+    ['92% used · resets in 3d 14h', '92%使用 · 3日14時間後にリセット'],
+    ['10% used · resets in 5m', '10%使用 · 5分後にリセット'],
+    ['100% used · resets now', '100%使用 · 今すぐリセット'],
+    ['10% used', '10%使用'],
+  ])('translates quota countdown %s', (source, expected) => {
+    expect(translateJa(source)).toBe(expected)
+    expect(translateJa(expected)).toBe(expected)
+  })
+
+  it('protects nested code, editable content and explicitly excluded user data', () => {
+    document.body.innerHTML = `
+      <pre><code><span title="Overview">Overview</span></code></pre>
+      <div contenteditable="true"><b>Settings</b></div>
+      <div translate="no"><span>Overview</span></div>
+      <div data-no-i18n="true"><span>Models</span></div>
+      <p>Settings</p>
+    `
+    localizeJapaneseSubtree(document.body)
+    expect(document.querySelector('pre span')).toHaveTextContent('Overview')
+    expect(document.querySelector('pre span')).toHaveAttribute('title', 'Overview')
+    expect(document.querySelector('[contenteditable]')).toHaveTextContent('Settings')
+    expect(document.querySelector('[translate]')).toHaveTextContent('Overview')
+    expect(document.querySelector('[data-no-i18n]')).toHaveTextContent('Models')
+    expect(document.querySelector('p')).toHaveTextContent('設定')
+  })
+
   it('translates exact and dynamic strings while preserving whitespace', () => {
     expect(translateJa('  Overview  ')).toBe('  概要  ')
     expect(translateJa('refreshed 12m ago')).toBe('12分前に更新')
