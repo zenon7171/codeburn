@@ -545,7 +545,11 @@ struct CapacityDockDetailView: View {
             }
 
             if let quota {
-                connectionLabel(quota.connection, provider: provider)
+                connectionLabel(
+                    quota.connection,
+                    provider: provider,
+                    hasPreviousUsage: quota.primary != nil || !quota.details.isEmpty
+                )
                 if quota.details.isEmpty, let primary = quota.primary {
                     CapacityDockQuotaRow(
                         window: primary,
@@ -593,7 +597,8 @@ struct CapacityDockDetailView: View {
     @ViewBuilder
     private func connectionLabel(
         _ connection: QuotaSummary.Connection,
-        provider: CapacityDockProvider
+        provider: CapacityDockProvider,
+        hasPreviousUsage: Bool
     ) -> some View {
         switch connection {
         case .connected:
@@ -607,7 +612,7 @@ struct CapacityDockDetailView: View {
                 .font(.system(size: 10))
                 .foregroundStyle(.yellow.opacity(0.82))
         case .transientFailure:
-            Text(CapacityDockCopy.text("Last known usage · retrying"))
+            Text(CapacityDockCopy.retryStatus(hasPreviousUsage: hasPreviousUsage))
                 .font(.system(size: 10))
                 .foregroundStyle(.orange.opacity(0.86))
         case .disconnected:

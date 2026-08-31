@@ -96,6 +96,8 @@ struct DockOnlyTests {
         #expect(CapacityDockCopy.japaneseReset(at: now.addingTimeInterval(482400), now: now) == "5日14時間後にリセット")
         #expect(CapacityDockCopy.japaneseReset(at: now.addingTimeInterval(-1), now: now) == "まもなくリセット")
         #expect(CapacityDockCopy.japaneseReset(at: nil, now: now) == "")
+        #expect(CapacityDockCopy.japaneseRetryStatus(hasPreviousUsage: true) == "前回の使用量 · 再試行中")
+        #expect(CapacityDockCopy.japaneseRetryStatus(hasPreviousUsage: false) == "一時的に取得できません · 自動再試行中")
     }
 
     @Test("Claude scoped windows retain their percentages and weekly headline")

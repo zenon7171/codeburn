@@ -38,6 +38,16 @@ enum CapacityDockCopy {
         japanese ? "使用率 \(label)" : label
     }
 
+    static func retryStatus(hasPreviousUsage: Bool) -> String {
+        japanese
+            ? japaneseRetryStatus(hasPreviousUsage: hasPreviousUsage)
+            : (hasPreviousUsage ? "Last known usage · retrying" : "Temporarily unavailable · retrying")
+    }
+
+    static func japaneseRetryStatus(hasPreviousUsage: Bool) -> String {
+        hasPreviousUsage ? "前回の使用量 · 再試行中" : "一時的に取得できません · 自動再試行中"
+    }
+
     static func guidance(_ provider: CapacityDockProvider) -> String {
         guard japanese else { return ProviderConnectionGuidance.dockInstruction(for: provider) }
         return "\(provider.displayName)にログイン済みの状態で「接続」を押してください。"
