@@ -1,0 +1,209 @@
+name: Sync upstream and maintain Japanese UI
+
+on:
+  schedule:
+    - cron: '17 18 * * *' # 03:17 JST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-ja-sync
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPOSITORY: getagentseal/codeburn
+  SYNC_BRANCH: automation/upstream-sync-ja
+  SYNC_PR_TITLE: '[automation] Sync upstream and audit Japanese UI'
+
+jobs:
+  sync:
+    if: github.repository == 'zenon7171/codeburn'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out fork main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch and merge upstream on a sync branch
+        id: merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          git remote add upstream "https://github.com/${UPSTREAM_REPOSITORY}.git" 2>/dev/null || true
+          git fetch upstream main
+          upstream_head="$(git rev-parse upstream/main)"
+          upstream_base="$(git merge-base HEAD upstream/main)"
+          echo "upstream_head=${upstream_head}" >> "$GITHUB_OUTPUT"
+          echo "upstream_base=${upstream_base}" >> "$GITHUB_OUTPUT"
+
+          if [[ "$upstream_base" == "$upstream_head" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git checkout -B "$SYNC_BRANCH"
+          if ! git merge --no-edit upstream/main; then
+            git merge --abort || true
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update sync-conflict issue
+        if: steps.merge.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="Upstream sync conflict"
+          body="Automatic merge of ${UPSTREAM_REPOSITORY}:main failed at ${GITHUB_SHA}. Resolve the localization-overlay conflict before the next sync."
+          issue="$(gh issue list --state open --search \"${title} in:title\" --json number --jq '.[0].number // empty')"
+          if [[ -n "$issue" ]]; then
+            gh issue comment "$issue" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
+          exit 1
+
+      - name: Set up Node.js
+        if: steps.merge.outputs.changed == 'true' && steps.merge.outputs.conflict != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            app/package-lock.json
+
+      - name: Audit strings introduced by upstream
+        if: steps.merge.outputs.changed == 'true' && steps.merge.outputs.conflict != 'true'
+        id: audit
+        continue-on-error: true
+        shell: bash
+        run: |
+          node scripts/i18n-audit.mjs \
+            --base "${{ steps.merge.outputs.upstream_base }}" \
+            --head "${{ steps.merge.outputs.upstream_head }}"
+
+      - name: Validate upstream merge
+        if: steps.merge.outputs.changed == 'true' && steps.merge.outputs.conflict != 'true'
+        id: validate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build:cli
+          npm ci --prefix app --no-audit --no-fund
+          npm --prefix app test
+          npm --prefix app run typecheck
+          npm --prefix app run build
+
+      - name: Report validation failure
+        if: steps.merge.outputs.changed == 'true' && steps.validate.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="Upstream sync validation failed"
+          body="The merge of upstream ${{ steps.merge.outputs.upstream_head }} failed tests, type checking, or builds. No sync branch was published. Inspect workflow run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."
+          issue="$(gh issue list --state open --search \"${title} in:title\" --json number --jq '.[0].number // empty')"
+          if [[ -n "$issue" ]]; then
+            gh issue comment "$issue" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
+          exit 1
+
+      - name: Publish sync branch
+        if: steps.merge.outputs.changed == 'true' && steps.validate.outcome == 'success'
+        run: git push --force-with-lease origin "HEAD:${SYNC_BRANCH}"
+
+      - name: Create or update upstream-sync pull request
+        if: steps.merge.outputs.changed == 'true' && steps.validate.outcome == 'success'
+        id: pull_request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ steps.audit.outcome }}" == "failure" ]]; then
+            audit_status="Translation review required; unmatched candidates are listed in the audit artifact/log."
+          else
+            audit_status="No newly introduced unmatched Japanese UI strings detected."
+          fi
+          cat > /tmp/upstream-pr.md <<BODY
+          Automated merge of \`${UPSTREAM_REPOSITORY}:main\` into this Japanese fork.
+
+          - Upstream base: \`${{ steps.merge.outputs.upstream_base }}\`
+          - Upstream head: \`${{ steps.merge.outputs.upstream_head }}\`
+          - Validation: root tests/build and desktop tests/typecheck/build passed
+          - Japanese audit: ${audit_status}
+          BODY
+
+          number="$(gh pr list --state open --head "$SYNC_BRANCH" --base main --json number --jq '.[0].number // empty')"
+          if [[ -n "$number" ]]; then
+            gh pr edit "$number" --title "$SYNC_PR_TITLE" --body-file /tmp/upstream-pr.md
+          else
+            extra=()
+            if [[ "${{ steps.audit.outcome }}" == "failure" ]]; then extra+=(--draft); fi
+            gh pr create --head "$SYNC_BRANCH" --base main --title "$SYNC_PR_TITLE" --body-file /tmp/upstream-pr.md "${extra[@]}"
+            number="$(gh pr list --state open --head "$SYNC_BRANCH" --base main --json number --jq '.[0].number')"
+          fi
+          if [[ "${{ steps.audit.outcome }}" == "failure" ]]; then
+            gh pr ready "$number" --undo || true
+          fi
+          echo "number=${number}" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update translation issue
+        if: steps.merge.outputs.changed == 'true' && steps.validate.outcome == 'success' && steps.audit.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title="Japanese translation update required"
+          count="$(node -e "console.log(require('./artifacts/i18n-missing-ja.json').count)")"
+          node <<'NODE' > /tmp/i18n-issue.md
+          const report = require('./artifacts/i18n-missing-ja.json')
+          console.log(`Upstream introduced **${report.count}** candidate UI string(s) not covered by \`app/renderer/i18n/ja.ts\`.`)
+          console.log('The sync PR remains draft; unmatched strings safely fall back to English.\n')
+          console.log('First candidates:')
+          for (const row of report.rows.slice(0, 25)) {
+            console.log(`- \`${row.text.replace(/`/g, '\\`')}\` — ${row.locations.join(', ')}`)
+          }
+          NODE
+          issue="$(gh issue list --state open --search \"${title} in:title\" --json number --jq '.[0].number // empty')"
+          if [[ -n "$issue" ]]; then
+            gh issue comment "$issue" --body-file /tmp/i18n-issue.md
+          else
+            gh issue create --title "$title" --body-file /tmp/i18n-issue.md
+          fi
+          echo "Detected ${count} untranslated candidate(s)."
+
+      - name: Merge clean sync automatically
+        if: steps.merge.outputs.changed == 'true' && steps.validate.outcome == 'success' && steps.audit.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          number="${{ steps.pull_request.outputs.number }}"
+          gh pr ready "$number" || true
+          gh pr merge "$number" --auto --merge --delete-branch \
+            || gh pr merge "$number" --merge --delete-branch \
+            || echo "Merge requirements are still pending; leaving PR #${number} ready."
