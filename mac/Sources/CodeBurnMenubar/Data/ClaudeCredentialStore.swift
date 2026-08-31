@@ -393,7 +393,7 @@ enum ClaudeCredentialStore {
             ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? homeDirectory.appendingPathComponent("Library/Application Support")
         return support
-            .appendingPathComponent("CodeBurn", isDirectory: true)
+            .appendingPathComponent(CodeBurnKeychainIdentity.cacheDirectoryName, isDirectory: true)
             .appendingPathComponent(cacheFilename)
     }
 

@@ -2,11 +2,13 @@
 
 [English / upstream README](README.md) · [日本語フォークのビルド・対応状況](README-JA-FORK.md)
 
+> **画像にある画面端のCapacity Dockだけが必要な方は、[Capacity Dock専用・日本語版](README-CAPACITY-DOCK.ja.md)を使ってください。** Claude／Codexの使用率を表示するSwift製アプリで、Electron DesktopやCodeBurn CLIは不要です。以下はCodeBurn全体の機能を説明するガイドです。
+
 **AIコーディングに使った費用とトークンを、タスク・モデル・ツール・プロジェクトごとに把握するための、無料のオープンソースツールです。** Claude Code、Codex、Cursorなどのツールが端末に保存したセッションを読み取り、支出の内訳、再試行のコスト、キャッシュ利用、成果との関係を表示します。
 
 この文書は、このフォークに取り込まれたv0.9.23の英語READMEをもとに整理した日本語ガイドです。コマンド名、オプション名、ファイルパスはそのまま使用できます。リンク先の個別ドキュメントは英語の場合があります。
 
-> **日本語の説明書と、アプリの日本語対応範囲は異なります。** このフォークが日本語化しているのはElectron Desktopの画面とアプリメニューです。CLI/TUI、`codeburn web`、Swiftメニューバー版などは未翻訳です。以下に掲載するnpm・Homebrew・公式リリースからの導入は、公式版の導入手順であり、日本語版をインストールする手順ではありません。
+> **日本語の説明書と、アプリの日本語対応範囲は異なります。** このフォークではCapacity Dock専用版、およびElectron Desktopの画面とアプリメニューを日本語化しています。CLI/TUI、`codeburn web`、通常のSwiftメニューバー版のその他の画面などは未翻訳です。以下に掲載するnpm・Homebrew・公式リリースからの導入は、公式版の導入手順であり、日本語版をインストールする手順ではありません。
 
 <p align="center">
   <img src="assets/providers.png" alt="CodeBurnの対応プロバイダー" width="420" />

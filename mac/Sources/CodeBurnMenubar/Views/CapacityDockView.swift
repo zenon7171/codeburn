@@ -258,13 +258,13 @@ struct CapacityDockView: View {
         .clipShape(railShape)
         .contentShape(railShape)
         .contextMenu {
-            Menu("Dock to Edge") {
-                Button("Left") { onDock(.left) }
-                Button("Right") { onDock(.right) }
-                Button("Top") { onDock(.top) }
-                Button("Bottom") { onDock(.bottom) }
+            Menu(CapacityDockCopy.text("Dock to Edge")) {
+                Button(CapacityDockCopy.text("Left")) { onDock(.left) }
+                Button(CapacityDockCopy.text("Right")) { onDock(.right) }
+                Button(CapacityDockCopy.text("Top")) { onDock(.top) }
+                Button(CapacityDockCopy.text("Bottom")) { onDock(.bottom) }
             }
-            Button("Hide Capacity Dock", action: onHide)
+            Button(CapacityDockCopy.text("Hide Capacity Dock"), action: onHide)
         }
         .simultaneousGesture(
             DragGesture(minimumDistance: 3, coordinateSpace: .global)
@@ -354,9 +354,9 @@ private struct CapacityDockProviderRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(provider.displayName) usage")
-        .accessibilityValue(headline?.percentLabel ?? "Unknown")
-        .accessibilityHint("Click to keep Capacity Dock expanded")
+        .accessibilityLabel(CapacityDockCopy.usage(provider.displayName))
+        .accessibilityValue(headline.map { CapacityDockCopy.usedPercent($0.percentLabel) } ?? CapacityDockCopy.text("Unknown"))
+        .accessibilityHint(CapacityDockCopy.text("Click to keep Capacity Dock expanded"))
     }
 
     private var headlinePercentColor: Color {
@@ -527,7 +527,7 @@ struct CapacityDockDetailView: View {
                         .foregroundStyle(Color.capacityDockText)
                         .frame(width: 24 * model.detailScale, height: 24 * model.detailScale)
                 }
-                Text("\(provider.displayName) Usage")
+                Text(CapacityDockCopy.usage(provider.displayName))
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(Color.capacityDockText)
                 Spacer(minLength: 8)
@@ -567,7 +567,7 @@ struct CapacityDockDetailView: View {
                     }
                 }
             } else {
-                Text(ProviderConnectionGuidance.dockInstruction(for: provider))
+                Text(CapacityDockCopy.guidance(provider))
                     .font(.system(size: 12))
                     .foregroundStyle(Color.capacityDockText.opacity(0.62))
                     .fixedSize(horizontal: false, vertical: true)
@@ -575,7 +575,7 @@ struct CapacityDockDetailView: View {
 
             if provider.catalogEntry.hasLiveCodeBurnQuotaAdapter,
                let action = CapacityDockConnectionAction.resolve(quota: quota) {
-                let title = action.title(for: provider)
+                let title = CapacityDockCopy.text(action.title(for: provider))
                 Button(title) { onConnect(provider) }
                     .buttonStyle(.borderedProminent)
                     .tint(provider.ringColor)
@@ -594,24 +594,24 @@ struct CapacityDockDetailView: View {
         case .connected:
             EmptyView()
         case .loading:
-            Text("Refreshing…")
+            Text(CapacityDockCopy.text("Refreshing…"))
                 .font(.system(size: 10))
                 .foregroundStyle(Color.capacityDockText.opacity(0.52))
         case .stale:
-            Text("Last known usage · refreshing")
+            Text(CapacityDockCopy.text("Last known usage · refreshing"))
                 .font(.system(size: 10))
                 .foregroundStyle(.yellow.opacity(0.82))
         case .transientFailure:
-            Text("Last known usage · retrying")
+            Text(CapacityDockCopy.text("Last known usage · retrying"))
                 .font(.system(size: 10))
                 .foregroundStyle(.orange.opacity(0.86))
         case .disconnected:
-            Text("Not connected")
+            Text(CapacityDockCopy.text("Not connected"))
                 .font(.system(size: 11))
                 .foregroundStyle(Color.capacityDockText.opacity(0.6))
         case .terminalFailure(let reason):
             VStack(alignment: .leading, spacing: 3 * model.detailScale) {
-                Text("Reconnect required")
+                Text(CapacityDockCopy.text("Reconnect required"))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.red)
                 if let reason, !reason.isEmpty {
@@ -620,7 +620,7 @@ struct CapacityDockDetailView: View {
                         .foregroundStyle(Color.capacityDockText.opacity(0.58))
                         .lineLimit(2)
                 }
-                Text(ProviderConnectionGuidance.dockInstruction(for: provider))
+                Text(CapacityDockCopy.guidance(provider))
                     .font(.system(size: 10))
                     .foregroundStyle(Color.capacityDockText.opacity(0.72))
                     .lineLimit(3)
@@ -637,13 +637,13 @@ private struct CapacityDockQuotaRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6 * scale) {
             HStack(alignment: .firstTextBaseline, spacing: 8 * scale) {
-                Text(CapacityDockQuotaPresentation.displayLabel(window.label))
+                Text(CapacityDockCopy.text(CapacityDockQuotaPresentation.displayLabel(window.label)))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Color.capacityDockText.opacity(0.82))
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
-                Text(window.percentLabel)
+                Text(CapacityDockCopy.usedPercent(window.percentLabel))
                     .font(.system(size: 12, weight: .medium))
                     .monospacedDigit()
                     .foregroundStyle(Color.capacityDockText)
@@ -658,7 +658,7 @@ private struct CapacityDockQuotaRow: View {
             }
             .frame(height: 6 * scale)
             if !window.resetsInLabel.isEmpty {
-                Text("Resets in \(window.resetsInLabel)")
+                Text(CapacityDockCopy.reset(window))
                     .font(.system(size: 10))
                     .monospacedDigit()
                     .foregroundStyle(Color.capacityDockText.opacity(0.5))

@@ -34,6 +34,7 @@ enum SubscriptionRefreshBackoff {
     }
 }
 
+#if !CAPACITY_DOCK_ONLY
 @main
 struct CodeBurnApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
@@ -49,6 +50,7 @@ struct CodeBurnApp: App {
         }
     }
 }
+#endif
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate, NSMenuDelegate {

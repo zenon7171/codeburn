@@ -59,8 +59,15 @@ enum KeychainCredentialCacheError: Error, LocalizedError, Equatable {
 /// tradeoff is that a dev/beta build sharing this source shares the item — patch
 /// these constants when running a second build alongside the release.
 enum CodeBurnKeychainIdentity {
+    #if CAPACITY_DOCK_ONLY
+    static let claudeService = "io.github.zenon7171.capacity-dock.claude.oauth.v1"
+    static let codexService = "io.github.zenon7171.capacity-dock.codex.oauth.v1"
+    static let cacheDirectoryName = "CapacityDockJA"
+    #else
+    static let cacheDirectoryName = "CodeBurn"
     static let claudeService = "org.agentseal.codeburn.menubar.claude.oauth.v1"
     static let codexService = "org.agentseal.codeburn.menubar.codex.oauth.v1"
+    #endif
     static let account = "default"
 }
 

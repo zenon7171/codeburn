@@ -1,4 +1,5 @@
-> **日本語で読む → [日本語README](README.ja.md)** · [日本語版の導入・ビルド・対応状況](README-JA-FORK.md)<br>
+> **画像のCapacity Dockだけを使う → [Capacity Dock専用・日本語版](README-CAPACITY-DOCK.ja.md)**（macOS / Claude・Codex / Electron・CodeBurn CLI不要）<br>
+> **CodeBurn全体を日本語で読む → [日本語README](README.ja.md)** · [日本語版の導入・ビルド・対応状況](README-JA-FORK.md)<br>
 > This is an unofficial Japanese fork. The upstream English README follows; official downloads below do not include this fork's Japanese UI.
 
 <table align="center">

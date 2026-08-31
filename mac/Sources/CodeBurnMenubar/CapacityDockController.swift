@@ -3,7 +3,7 @@ import SwiftUI
 
 @MainActor
 final class CapacityDockController {
-    private let store: AppStore
+    private let store: any CapacityDockQuotaSource
     private let defaults: UserDefaults
     private let model: CapacityDockViewModel
 
@@ -38,7 +38,7 @@ final class CapacityDockController {
     private var detailMotion: CapacityDockMotionRun?
     private var detailIsDismissing = false
 
-    init(store: AppStore, defaults: UserDefaults = .standard) {
+    init(store: any CapacityDockQuotaSource, defaults: UserDefaults = .standard) {
         self.store = store
         self.defaults = defaults
         self.model = CapacityDockViewModel(preferences: CapacityDockPreferences.load(defaults: defaults))
@@ -210,7 +210,7 @@ final class CapacityDockController {
             }
         )
         let panel = CapacityDockPanel()
-        let hosting = CapacityDockHostingView(rootView: view.environment(store))
+        let hosting = CapacityDockHostingView(rootView: view)
         hosting.autoresizingMask = [.width, .height]
         // At the top edge the menu-bar/notch safe-area inset would push the rail
         // down, leaving a gap the bottom edge never shows. Opt the rail out of
@@ -249,7 +249,7 @@ final class CapacityDockController {
             }
         )
         let panel = CapacityDockPanel()
-        let hosting = CapacityDockHostingView(rootView: view.environment(store))
+        let hosting = CapacityDockHostingView(rootView: view)
         hosting.autoresizingMask = [.width, .height]
         hosting.interactiveShapeContains = { [weak model] point, bounds in
             guard let model else { return false }

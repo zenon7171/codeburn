@@ -4,7 +4,9 @@
 
 対象 upstream: [`getagentseal/codeburn`](https://github.com/getagentseal/codeburn) の `main` ブランチ。
 
-このフォークは **Electron Desktopの画面とアプリメニュー**を日本語化します。現状は日本語化の初版を改善した段階で、完全翻訳ではありません。
+このフォークには **[Capacity Dock専用の日本語版](README-CAPACITY-DOCK.ja.md)** があります。画面端のClaude／Codex使用率表示だけが必要な場合はこちらを使ってください。ElectronやCodeBurn CLIは起動しません。
+
+以下は既存の **Electron Desktopの画面とアプリメニュー**の日本語化についての説明です。こちらは完全翻訳ではありません。
 
 ## ローカルで使う
 
@@ -62,7 +64,7 @@ node scripts/i18n-audit.mjs --base <old-upstream-sha> --head <new-upstream-sha>
 ## 未対応・注意点
 
 - `codeburn web`が使う別実装の`dash/`は日本語化対象外です。Desktop rendererをブラウザーで開くには検証用データなどが必要で、ViteだけではElectronの接続がありません。
-- CLI/TUI、Swiftメニューバー版、Windowsネイティブ版は未翻訳です。
+- CLI/TUI、通常のSwiftメニューバー版、Windowsネイティブ版は未翻訳です。別ビルドのCapacity Dock専用版は日本語に対応しています。
 - 全文言の正式なi18n化、新規文言のAI自動翻訳、日本語版の自動リリースは未実装です。
 - アプリ内の更新確認先は依然として公式upstreamです。更新先から公式バイナリを導入すると日本語化が失われます。日本語版はこのフォークから再ビルドしてください。
 - サンプル画面の表示確認と同梱CLIの起動検査は実施しましたが、実際のアカウントや全プロバイダーでの接続確認は行っていません。
